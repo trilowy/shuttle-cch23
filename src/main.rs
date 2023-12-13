@@ -17,7 +17,7 @@ async fn main() -> ShuttleAxum {
         .route("/1/*numbers", get(day_1::task_1_and_2))
         .route("/4/strength", post(day_4::task_1))
         .route("/4/contest", post(day_4::task_2))
-        .route("/6", post(day_6::task_1));
+        .route("/6", post(day_6::task_1_and_2));
 
     Ok(router.into())
 }
