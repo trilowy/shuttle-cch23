@@ -1,6 +1,7 @@
 use axum::extract::Json;
 use base64::{engine::general_purpose, Engine};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use tower_cookies::Cookies;
 
 pub async fn task_1(cookies: Cookies) -> String {
@@ -9,52 +10,52 @@ pub async fn task_1(cookies: Cookies) -> String {
 
 #[derive(Deserialize, Debug)]
 struct RecipeAndPantry {
-    recipe: Ingredients,
-    pantry: Ingredients,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Ingredients {
-    flour: u64,
-    sugar: u64,
-    butter: u64,
-    #[serde(rename = "baking powder")]
-    baking_powder: u64,
-    #[serde(rename = "chocolate chips")]
-    chocolate_chips: u64,
+    recipe: HashMap<String, u64>,
+    pantry: HashMap<String, u64>,
 }
 
 #[derive(Serialize, Debug)]
 pub struct CookiesAndPantry {
     cookies: u64,
-    pantry: Ingredients,
+    pantry: HashMap<String, u64>,
 }
 
-pub async fn task_2(cookies: Cookies) -> Json<CookiesAndPantry> {
+pub async fn task_2_and_3(cookies: Cookies) -> Json<CookiesAndPantry> {
     let recipe_and_pantry: RecipeAndPantry =
         serde_json::from_str(&get_cookie_recipe(cookies)).unwrap();
-    let recipe = recipe_and_pantry.recipe;
+    let recipe: HashMap<String, u64> = recipe_and_pantry
+        .recipe
+        .into_iter()
+        .filter(|(_, quantity)| *quantity != 0)
+        .collect();
     let pantry = recipe_and_pantry.pantry;
 
-    let cookies = [
-        pantry.flour as f64 / recipe.flour as f64,
-        pantry.sugar as f64 / recipe.sugar as f64,
-        pantry.butter as f64 / recipe.butter as f64,
-        pantry.baking_powder as f64 / recipe.baking_powder as f64,
-        pantry.chocolate_chips as f64 / recipe.chocolate_chips as f64,
-    ]
-    .into_iter()
-    .map(|value| value.floor() as u64)
-    .min()
-    .unwrap_or_default();
+    let cookies = recipe
+        .iter()
+        .map(|(ingredient, quantity)| {
+            pantry
+                .get(ingredient)
+                .map(|&value| value)
+                .unwrap_or_default() as f64
+                / *quantity as f64
+        })
+        .map(|value| value.floor() as u64)
+        .min()
+        .unwrap_or_default();
 
-    let pantry = Ingredients {
-        flour: pantry.flour - (cookies * recipe.flour),
-        sugar: pantry.sugar - (cookies * recipe.sugar),
-        butter: pantry.butter - (cookies * recipe.butter),
-        baking_powder: pantry.baking_powder - (cookies * recipe.baking_powder),
-        chocolate_chips: pantry.chocolate_chips - (cookies * recipe.chocolate_chips),
-    };
+    let pantry = pantry
+        .into_iter()
+        .map(|(ingredient, quantity)| {
+            let quantity = quantity
+                - (cookies
+                    * recipe
+                        .get(&ingredient)
+                        .map(|&value| value)
+                        .unwrap_or_default());
+
+            (ingredient, quantity)
+        })
+        .collect();
 
     Json(CookiesAndPantry { cookies, pantry })
 }
