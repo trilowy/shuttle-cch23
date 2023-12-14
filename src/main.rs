@@ -4,6 +4,7 @@ use axum::{
 };
 use shuttle_axum::ShuttleAxum;
 use tower_cookies::CookieManagerLayer;
+use tower_http::services::ServeDir;
 
 mod day_1;
 mod day_4;
@@ -25,6 +26,7 @@ async fn main() -> ShuttleAxum {
         .route("/7/bake", get(day_7::task_2_and_3))
         .route("/8/weight/:pokedex_number", get(day_8::task_1))
         .route("/8/drop/:pokedex_number", get(day_8::task_2))
+        .nest_service("/11/assets", ServeDir::new("assets"))
         .layer(CookieManagerLayer::new());
 
     Ok(router.into())
