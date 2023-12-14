@@ -9,6 +9,7 @@ mod day_1;
 mod day_4;
 mod day_6;
 mod day_7;
+mod day_8;
 mod day_minus_1;
 
 #[shuttle_runtime::main]
@@ -22,6 +23,7 @@ async fn main() -> ShuttleAxum {
         .route("/6", post(day_6::task_1_and_2))
         .route("/7/decode", get(day_7::task_1))
         .route("/7/bake", get(day_7::task_2_and_3))
+        .route("/8/weight/:pokedex_number", get(day_8::task_1))
         .layer(CookieManagerLayer::new());
 
     Ok(router.into())
