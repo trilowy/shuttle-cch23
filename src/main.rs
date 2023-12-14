@@ -24,6 +24,7 @@ async fn main() -> ShuttleAxum {
         .route("/7/decode", get(day_7::task_1))
         .route("/7/bake", get(day_7::task_2_and_3))
         .route("/8/weight/:pokedex_number", get(day_8::task_1))
+        .route("/8/drop/:pokedex_number", get(day_8::task_2))
         .layer(CookieManagerLayer::new());
 
     Ok(router.into())
