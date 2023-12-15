@@ -21,3 +21,8 @@ image = "0.24.7"
 ulid = { version = "1.1.0", features = ["serde", "uuid"] }
 uuid = { version = "1.6.1", features = ["serde"] }
 chrono = { version = "0.4.31", features = ["serde"] }
+shuttle-shared-db = { version = "0.35.1", features = ["postgres"] }
+sqlx = { version = "0.7.3", features = [
+    "runtime-tokio-native-tls",
+    "postgres",
+] }

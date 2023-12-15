@@ -3,6 +3,7 @@ use axum::{
     Router,
 };
 use shuttle_axum::ShuttleAxum;
+use sqlx::PgPool;
 use std::{
     collections::HashMap,
     sync::{Arc, Mutex},
@@ -14,6 +15,7 @@ use tower_http::services::ServeDir;
 mod day_1;
 mod day_11;
 mod day_12;
+mod day_13;
 mod day_4;
 mod day_6;
 mod day_7;
@@ -21,8 +23,8 @@ mod day_8;
 mod day_minus_1;
 
 #[shuttle_runtime::main]
-async fn main() -> ShuttleAxum {
-    let shared_state = Arc::new(AppState::new());
+async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> ShuttleAxum {
+    let shared_state = Arc::new(AppState::new(pool));
 
     let router = Router::new()
         .route("/", get(day_minus_1::task_1))
@@ -40,6 +42,7 @@ async fn main() -> ShuttleAxum {
         .route("/12/load/:string", get(day_12::task_1_load))
         .route("/12/ulids", post(day_12::task_2))
         .route("/12/ulids/:weekday", post(day_12::task_3))
+        .route("/13/sql", get(day_13::task_1))
         .nest_service("/11/assets", ServeDir::new("assets"))
         .layer(CookieManagerLayer::new())
         .with_state(shared_state);
@@ -49,12 +52,14 @@ async fn main() -> ShuttleAxum {
 
 struct AppState {
     day_12: Mutex<HashMap<String, Instant>>,
+    pool: PgPool,
 }
 
 impl AppState {
-    fn new() -> Self {
+    fn new(pool: PgPool) -> Self {
         Self {
             day_12: Mutex::new(HashMap::new()),
+            pool,
         }
     }
 }
