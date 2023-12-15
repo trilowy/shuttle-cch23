@@ -38,6 +38,7 @@ async fn main() -> ShuttleAxum {
         .route("/11/red_pixels", post(day_11::task_2))
         .route("/12/save/:string", post(day_12::task_1_save))
         .route("/12/load/:string", get(day_12::task_1_load))
+        .route("/12/ulids", post(day_12::task_2))
         .nest_service("/11/assets", ServeDir::new("assets"))
         .layer(CookieManagerLayer::new())
         .with_state(shared_state);
