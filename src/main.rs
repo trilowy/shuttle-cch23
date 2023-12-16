@@ -46,6 +46,7 @@ async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> ShuttleAxum {
         .route("/13/reset", post(day_13::task_2_reset))
         .route("/13/orders", post(day_13::task_2_orders))
         .route("/13/orders/total", get(day_13::task_2_total))
+        .route("/13/orders/popular", get(day_13::task_3))
         .nest_service("/11/assets", ServeDir::new("assets"))
         .layer(CookieManagerLayer::new())
         .with_state(shared_state);

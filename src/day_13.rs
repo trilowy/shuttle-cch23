@@ -89,3 +89,28 @@ pub async fn task_2_total(State(state): State<Arc<AppState>>) -> Json<Total> {
 
     Json(total)
 }
+
+#[derive(Serialize, FromRow, Default)]
+pub struct Popular {
+    popular: Option<String>,
+}
+
+pub async fn task_3(State(state): State<Arc<AppState>>) -> Json<Popular> {
+    let popular = sqlx::query_as::<_, Popular>(
+        r#"
+            SELECT gift_name AS popular,
+                sum(quantity) AS total_quantity
+            FROM orders
+            GROUP BY gift_name
+            ORDER BY total_quantity DESC
+            LIMIT 1
+        "#,
+    )
+    .fetch_optional(&state.pool)
+    .await
+    .ok()
+    .flatten()
+    .unwrap_or_default();
+
+    Json(popular)
+}
