@@ -16,3 +16,13 @@ pub struct LayoutTemplate {
 pub async fn task_1(Json(Content { content }): Json<Content>) -> LayoutTemplate {
     LayoutTemplate { content }
 }
+
+#[derive(Template)]
+#[template(path = "safe_layout.html")]
+pub struct SafeLayoutTemplate {
+    content: String,
+}
+
+pub async fn task_2(Json(Content { content }): Json<Content>) -> SafeLayoutTemplate {
+    SafeLayoutTemplate { content }
+}
