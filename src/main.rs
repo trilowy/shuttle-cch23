@@ -16,6 +16,7 @@ mod day_1;
 mod day_11;
 mod day_12;
 mod day_13;
+mod day_14;
 mod day_4;
 mod day_6;
 mod day_7;
@@ -67,6 +68,7 @@ async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> ShuttleAxum {
                 .route("/orders/total", get(day_13::task_2_total))
                 .route("/orders/popular", get(day_13::task_3)),
         )
+        .route("/14/unsafe", post(day_14::task_1))
         .nest_service("/11/assets", ServeDir::new("assets"))
         .layer(CookieManagerLayer::new())
         .with_state(shared_state);
