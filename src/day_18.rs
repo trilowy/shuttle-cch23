@@ -1,5 +1,8 @@
 use crate::AppState;
-use axum::{extract::State, Json};
+use axum::{
+    extract::{Path, State},
+    Json,
+};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use std::sync::Arc;
@@ -95,4 +98,41 @@ pub async fn task_1_total(State(state): State<Arc<AppState>>) -> Json<Vec<Total>
     .unwrap();
 
     Json(totals)
+}
+
+#[derive(Serialize, FromRow, Default)]
+pub struct TopGift {
+    region: String,
+    top_gifts: Vec<String>,
+}
+
+pub async fn task_2(
+    Path(limit): Path<i32>,
+    State(state): State<Arc<AppState>>,
+) -> Json<Vec<TopGift>> {
+    let top_gifts = sqlx::query_as::<_, TopGift>(
+        r#"
+            SELECT r.name AS region,
+                array_remove(array_agg(o.gift_name), NULL) AS top_gifts
+            FROM regions r
+            LEFT JOIN LATERAL (
+                SELECT o.gift_name,
+                    sum(o.quantity) AS total_quantity
+                FROM orders o
+                WHERE o.region_id = r.id
+                GROUP BY o.gift_name
+                ORDER BY total_quantity DESC,
+                    o.gift_name ASC
+                LIMIT $1
+                ) o ON TRUE
+            GROUP BY r.name
+            ORDER BY r.name ASC
+        "#,
+    )
+    .bind(limit)
+    .fetch_all(&state.pool)
+    .await
+    .unwrap();
+
+    Json(top_gifts)
 }
