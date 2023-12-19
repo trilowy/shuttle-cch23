@@ -1,16 +1,14 @@
-use crate::AppState;
 use axum::{extract::State, Json};
 use serde::{Deserialize, Serialize};
-use sqlx::{FromRow, Row};
-use std::sync::Arc;
+use sqlx::{FromRow, PgPool, Row};
 
-pub async fn task_1(State(state): State<Arc<AppState>>) -> String {
+pub async fn task_1(State(pool): State<PgPool>) -> String {
     sqlx::query(
         r#"
             SELECT 20231213
         "#,
     )
-    .fetch_optional(&state.pool)
+    .fetch_optional(&pool)
     .await
     .unwrap()
     .unwrap()
@@ -18,13 +16,13 @@ pub async fn task_1(State(state): State<Arc<AppState>>) -> String {
     .to_string()
 }
 
-pub async fn task_2_reset(State(state): State<Arc<AppState>>) {
+pub async fn task_2_reset(State(pool): State<PgPool>) {
     sqlx::query(
         r#"
             DROP TABLE IF EXISTS orders
         "#,
     )
-    .fetch_optional(&state.pool)
+    .fetch_optional(&pool)
     .await
     .unwrap();
 
@@ -38,7 +36,7 @@ pub async fn task_2_reset(State(state): State<Arc<AppState>>) {
             )
         "#,
     )
-    .fetch_optional(&state.pool)
+    .fetch_optional(&pool)
     .await
     .unwrap();
 }
@@ -51,7 +49,7 @@ pub struct Order {
     quantity: i32,
 }
 
-pub async fn task_2_orders(State(state): State<Arc<AppState>>, Json(orders): Json<Vec<Order>>) {
+pub async fn task_2_orders(State(pool): State<PgPool>, Json(orders): Json<Vec<Order>>) {
     for order in orders {
         sqlx::query(
             r#"
@@ -63,7 +61,7 @@ pub async fn task_2_orders(State(state): State<Arc<AppState>>, Json(orders): Jso
         .bind(order.region_id)
         .bind(order.gift_name)
         .bind(order.quantity)
-        .fetch_optional(&state.pool)
+        .fetch_optional(&pool)
         .await
         .unwrap();
     }
@@ -74,14 +72,14 @@ pub struct Total {
     total: i64,
 }
 
-pub async fn task_2_total(State(state): State<Arc<AppState>>) -> Json<Total> {
+pub async fn task_2_total(State(pool): State<PgPool>) -> Json<Total> {
     let total = sqlx::query_as::<_, Total>(
         r#"
             SELECT sum(quantity) AS total
             FROM orders
         "#,
     )
-    .fetch_optional(&state.pool)
+    .fetch_optional(&pool)
     .await
     .ok()
     .flatten()
@@ -95,7 +93,7 @@ pub struct Popular {
     popular: Option<String>,
 }
 
-pub async fn task_3(State(state): State<Arc<AppState>>) -> Json<Popular> {
+pub async fn task_3(State(pool): State<PgPool>) -> Json<Popular> {
     let popular = sqlx::query_as::<_, Popular>(
         r#"
             SELECT gift_name AS popular,
@@ -106,7 +104,7 @@ pub async fn task_3(State(state): State<Arc<AppState>>) -> Json<Popular> {
             LIMIT 1
         "#,
     )
-    .fetch_optional(&state.pool)
+    .fetch_optional(&pool)
     .await
     .ok()
     .flatten()
