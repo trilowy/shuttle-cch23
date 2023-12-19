@@ -1,19 +1,17 @@
-use crate::AppState;
 use axum::{
     extract::{Path, State},
     Json,
 };
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
-use std::sync::Arc;
+use sqlx::{FromRow, PgPool};
 
-pub async fn task_1_reset(State(state): State<Arc<AppState>>) {
+pub async fn task_1_reset(State(pool): State<PgPool>) {
     sqlx::query(
         r#"
             DROP TABLE IF EXISTS regions
         "#,
     )
-    .fetch_optional(&state.pool)
+    .fetch_optional(&pool)
     .await
     .unwrap();
 
@@ -22,7 +20,7 @@ pub async fn task_1_reset(State(state): State<Arc<AppState>>) {
             DROP TABLE IF EXISTS orders
         "#,
     )
-    .fetch_optional(&state.pool)
+    .fetch_optional(&pool)
     .await
     .unwrap();
 
@@ -34,7 +32,7 @@ pub async fn task_1_reset(State(state): State<Arc<AppState>>) {
             )
         "#,
     )
-    .fetch_optional(&state.pool)
+    .fetch_optional(&pool)
     .await
     .unwrap();
 
@@ -48,7 +46,7 @@ pub async fn task_1_reset(State(state): State<Arc<AppState>>) {
             )
         "#,
     )
-    .fetch_optional(&state.pool)
+    .fetch_optional(&pool)
     .await
     .unwrap();
 }
@@ -59,7 +57,7 @@ pub struct Region {
     name: String,
 }
 
-pub async fn task_1_regions(State(state): State<Arc<AppState>>, Json(regions): Json<Vec<Region>>) {
+pub async fn task_1_regions(State(pool): State<PgPool>, Json(regions): Json<Vec<Region>>) {
     for region in regions {
         sqlx::query(
             r#"
@@ -69,7 +67,7 @@ pub async fn task_1_regions(State(state): State<Arc<AppState>>, Json(regions): J
         )
         .bind(region.id)
         .bind(region.name)
-        .fetch_optional(&state.pool)
+        .fetch_optional(&pool)
         .await
         .unwrap();
     }
@@ -81,7 +79,7 @@ pub struct Total {
     total: i64,
 }
 
-pub async fn task_1_total(State(state): State<Arc<AppState>>) -> Json<Vec<Total>> {
+pub async fn task_1_total(State(pool): State<PgPool>) -> Json<Vec<Total>> {
     let totals = sqlx::query_as::<_, Total>(
         r#"
             SELECT r.name AS region,
@@ -93,7 +91,7 @@ pub async fn task_1_total(State(state): State<Arc<AppState>>) -> Json<Vec<Total>
             ORDER BY r.name ASC
         "#,
     )
-    .fetch_all(&state.pool)
+    .fetch_all(&pool)
     .await
     .unwrap();
 
@@ -106,10 +104,7 @@ pub struct TopGift {
     top_gifts: Vec<String>,
 }
 
-pub async fn task_2(
-    Path(limit): Path<i32>,
-    State(state): State<Arc<AppState>>,
-) -> Json<Vec<TopGift>> {
+pub async fn task_2(Path(limit): Path<i32>, State(pool): State<PgPool>) -> Json<Vec<TopGift>> {
     let top_gifts = sqlx::query_as::<_, TopGift>(
         r#"
             SELECT r.name AS region,
@@ -130,7 +125,7 @@ pub async fn task_2(
         "#,
     )
     .bind(limit)
-    .fetch_all(&state.pool)
+    .fetch_all(&pool)
     .await
     .unwrap();
 

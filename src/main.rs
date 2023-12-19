@@ -1,14 +1,12 @@
 use axum::{
+    extract::FromRef,
     routing::{get, post},
     Router,
 };
 use shuttle_axum::ShuttleAxum;
 use sqlx::PgPool;
-use std::{
-    collections::HashMap,
-    sync::{Arc, Mutex},
-    time::Instant,
-};
+use std::{collections::HashMap, sync::Arc, time::Instant};
+use tokio::sync::RwLock;
 use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
 
@@ -28,7 +26,7 @@ mod day_19;
 
 #[shuttle_runtime::main]
 async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> ShuttleAxum {
-    let shared_state = Arc::new(AppState::new(pool));
+    let shared_state = AppState::new(pool);
 
     let router = Router::new()
         .route("/", get(day_00::task_1))
@@ -100,16 +98,31 @@ async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> ShuttleAxum {
     Ok(router.into())
 }
 
+type Day12Database = Arc<RwLock<HashMap<String, Instant>>>;
+
+#[derive(Clone)]
 struct AppState {
-    day_12: Mutex<HashMap<String, Instant>>,
+    day_12_database: Day12Database,
     pool: PgPool,
 }
 
 impl AppState {
     fn new(pool: PgPool) -> Self {
         Self {
-            day_12: Mutex::new(HashMap::new()),
+            day_12_database: Arc::new(RwLock::new(HashMap::new())),
             pool,
         }
+    }
+}
+
+impl FromRef<AppState> for Day12Database {
+    fn from_ref(app_state: &AppState) -> Day12Database {
+        app_state.day_12_database.clone()
+    }
+}
+
+impl FromRef<AppState> for PgPool {
+    fn from_ref(app_state: &AppState) -> PgPool {
+        app_state.pool.clone()
     }
 }

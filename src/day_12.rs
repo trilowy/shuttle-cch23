@@ -1,20 +1,22 @@
-use crate::AppState;
+use crate::Day12Database;
 use axum::extract::{Json, Path, State};
 use chrono::{DateTime, Datelike, Utc, Weekday};
 use serde::Serialize;
-use std::{sync::Arc, time::Instant};
+use std::time::Instant;
 use ulid::Ulid;
 use uuid::Uuid;
 
-pub async fn task_1_save(Path(string): Path<String>, State(state): State<Arc<AppState>>) {
-    state.day_12.lock().unwrap().insert(string, Instant::now());
+pub async fn task_1_save(Path(string): Path<String>, State(day_12_database): State<Day12Database>) {
+    day_12_database.write().await.insert(string, Instant::now());
 }
 
-pub async fn task_1_load(Path(string): Path<String>, State(state): State<Arc<AppState>>) -> String {
-    state
-        .day_12
-        .lock()
-        .unwrap()
+pub async fn task_1_load(
+    Path(string): Path<String>,
+    State(day_12_database): State<Day12Database>,
+) -> String {
+    day_12_database
+        .read()
+        .await
         .get(&string)
         .map(|time| time.elapsed().as_secs())
         .unwrap_or_default()
