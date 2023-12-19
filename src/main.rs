@@ -1,8 +1,12 @@
 use axum::{
-    extract::FromRef,
+    extract::{
+        ws::{Message, WebSocket},
+        FromRef,
+    },
     routing::{get, post},
     Router,
 };
+use futures::stream::SplitSink;
 use shuttle_axum::ShuttleAxum;
 use sqlx::PgPool;
 use std::{collections::HashMap, sync::Arc, time::Instant};
@@ -90,7 +94,14 @@ async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> ShuttleAxum {
                 .route("/regions/total", get(day_18::task_1_total))
                 .route("/regions/top_list/:number", get(day_18::task_2)),
         )
-        .route("/19/ws/ping", get(day_19::task_1))
+        .nest(
+            "/19",
+            Router::new()
+                .route("/ws/ping", get(day_19::task_1))
+                .route("/reset", post(day_19::task_2_reset))
+                .route("/views", get(day_19::task_2_views))
+                .route("/ws/room/:room_number/user/:user", get(day_19::task_2_room)),
+        )
         .nest_service("/11/assets", ServeDir::new("assets"))
         .layer(CookieManagerLayer::new())
         .with_state(shared_state);
@@ -100,10 +111,16 @@ async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> ShuttleAxum {
 
 type Day12Database = Arc<RwLock<HashMap<String, Instant>>>;
 
+type Day19Views = Arc<RwLock<u32>>;
+
+type Day19Rooms = Arc<RwLock<HashMap<u32, Vec<SplitSink<WebSocket, Message>>>>>;
+
 #[derive(Clone)]
 struct AppState {
     day_12_database: Day12Database,
     pool: PgPool,
+    day_19_views: Day19Views,
+    day_19_rooms: Day19Rooms,
 }
 
 impl AppState {
@@ -111,6 +128,8 @@ impl AppState {
         Self {
             day_12_database: Arc::new(RwLock::new(HashMap::new())),
             pool,
+            day_19_views: Arc::new(RwLock::new(0)),
+            day_19_rooms: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 }
@@ -124,5 +143,17 @@ impl FromRef<AppState> for Day12Database {
 impl FromRef<AppState> for PgPool {
     fn from_ref(app_state: &AppState) -> PgPool {
         app_state.pool.clone()
+    }
+}
+
+impl FromRef<AppState> for Day19Views {
+    fn from_ref(app_state: &AppState) -> Day19Views {
+        app_state.day_19_views.clone()
+    }
+}
+
+impl FromRef<AppState> for Day19Rooms {
+    fn from_ref(app_state: &AppState) -> Day19Rooms {
+        app_state.day_19_rooms.clone()
     }
 }
