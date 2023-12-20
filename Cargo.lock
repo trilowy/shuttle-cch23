@@ -408,6 +408,7 @@ dependencies = [
  "shuttle-runtime",
  "shuttle-shared-db",
  "sqlx",
+ "tar",
  "tokio",
  "tower-cookies",
  "tower-http 0.5.0",
@@ -780,6 +781,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "64d6dafc854908ff5da46ff3f8f473c6984119a2876a383a860246dd7841a868"
 dependencies = [
  "simd-adler32",
+]
+
+[[package]]
+name = "filetime"
+version = "0.2.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ee447700ac8aa0b2f2bd7bc4462ad686ba06baa6727ac149a2d6277f0d240fd"
+dependencies = [
+ "cfg-if",
+ "libc",
+ "redox_syscall",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3155,6 +3168,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "tar"
+version = "0.4.40"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b16afcea1f22891c49a00c751c7b63b2233284064f11a200fc624137c51e2ddb"
+dependencies = [
+ "filetime",
+ "libc",
+ "xattr",
+]
+
+[[package]]
 name = "tempfile"
 version = "3.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4021,6 +4045,15 @@ checksum = "524e57b2c537c0f9b1e69f1965311ec12182b4122e45035b1508cd24d2adadb1"
 dependencies = [
  "cfg-if",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "xattr"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fbc6ab6ec1907d1a901cdbcd2bd4cb9e7d64ce5c9739cbb97d3c391acd8c7fae"
+dependencies = [
+ "libc",
 ]
 
 [[package]]
