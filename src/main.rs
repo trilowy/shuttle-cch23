@@ -6,6 +6,7 @@ use axum::{
     routing::{get, post},
     Router,
 };
+use country_boundaries::{CountryBoundaries, BOUNDARIES_ODBL_360X180};
 use futures::stream::SplitSink;
 use shuttle_axum::ShuttleAxum;
 use sqlx::PgPool;
@@ -111,7 +112,12 @@ async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> ShuttleAxum {
                 .route("/archive_files_size", post(day_20::task_1_file_size))
                 .route("/cookie", post(day_20::task_2)),
         )
-        .route("/21/coords/:binary", get(day_21::task_1))
+        .nest(
+            "/21",
+            Router::new()
+                .route("/coords/:binary", get(day_21::task_1))
+                .route("/country/:binary", get(day_21::task_2)),
+        )
         .nest_service("/11/assets", ServeDir::new("assets"))
         .layer(CookieManagerLayer::new())
         .with_state(shared_state);
@@ -131,6 +137,7 @@ struct AppState {
     pool: PgPool,
     day_19_views: Day19Views,
     day_19_rooms: Day19Rooms,
+    geocoder: Arc<CountryBoundaries>,
 }
 
 impl AppState {
@@ -140,6 +147,7 @@ impl AppState {
             pool,
             day_19_views: Arc::new(RwLock::new(0)),
             day_19_rooms: Arc::new(RwLock::new(HashMap::new())),
+            geocoder: Arc::new(CountryBoundaries::from_reader(BOUNDARIES_ODBL_360X180).unwrap()),
         }
     }
 }
@@ -165,5 +173,11 @@ impl FromRef<AppState> for Day19Views {
 impl FromRef<AppState> for Day19Rooms {
     fn from_ref(app_state: &AppState) -> Day19Rooms {
         app_state.day_19_rooms.clone()
+    }
+}
+
+impl FromRef<AppState> for Arc<CountryBoundaries> {
+    fn from_ref(app_state: &AppState) -> Arc<CountryBoundaries> {
+        app_state.geocoder.clone()
     }
 }

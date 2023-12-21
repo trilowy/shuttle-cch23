@@ -466,11 +466,13 @@ dependencies = [
  "axum 0.7.2",
  "base64",
  "chrono",
+ "country-boundaries",
  "dms-coordinates",
  "emojis",
  "futures",
  "gix",
  "image",
+ "iso_country",
  "reqwest",
  "s2",
  "serde",
@@ -588,6 +590,12 @@ name = "core-foundation-sys"
 version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06ea2b9bc92be3c2baa9334a323ebca2d6f074ff852cd1d7b11064035cd3868f"
+
+[[package]]
+name = "country-boundaries"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8a949524fd9d83cd48e5046cd6212c1e533477d376b82570b6c0bcc4c6775625"
 
 [[package]]
 name = "cpufeatures"
@@ -2426,6 +2434,15 @@ dependencies = [
  "hermit-abi",
  "rustix",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "iso_country"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "20633e788d3948ea7336861fdb09ec247f5dae4267e8f0743fa97de26c28624d"
+dependencies = [
+ "lazy_static",
 ]
 
 [[package]]
