@@ -1,5 +1,5 @@
 use axum::body::Bytes;
-use gix::traverse::commit::Sorting;
+use gix::{objs::Kind, traverse::commit::Sorting, Tree};
 use std::str;
 use tar::Archive;
 
@@ -34,18 +34,7 @@ pub async fn task_2(body: Bytes) -> String {
         .unwrap()
         .flatten()
         .map(|info| info.object().unwrap())
-        .find(|commit| {
-            commit
-                .tree()
-                .unwrap()
-                .find_entry("santa.txt")
-                .map(|entry| {
-                    str::from_utf8(entry.object().unwrap().data.as_slice())
-                        .unwrap()
-                        .contains("COOKIE")
-                })
-                .unwrap_or(false)
-        })
+        .find(|commit| is_santa_cookie_eaten(commit.tree().unwrap()))
         .map(|commit| {
             format!(
                 "{} {}",
@@ -53,7 +42,23 @@ pub async fn task_2(body: Bytes) -> String {
                 commit.id().to_hex().to_string()
             )
         })
-        .unwrap();
+        .unwrap_or_default();
 
     cookie_eater
+}
+
+fn is_santa_cookie_eaten(tree: Tree) -> bool {
+    tree.iter().flatten().any(|entry| {
+        let object = entry.object().unwrap();
+
+        match object.kind {
+            Kind::Tree => is_santa_cookie_eaten(object.into_tree()),
+            _ => {
+                entry.filename() == "santa.txt"
+                    && str::from_utf8(entry.object().unwrap().data.as_slice())
+                        .unwrap()
+                        .contains("COOKIE")
+            }
+        }
+    })
 }
