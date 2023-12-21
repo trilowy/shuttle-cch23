@@ -107,7 +107,8 @@ async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> ShuttleAxum {
             "/20",
             Router::new()
                 .route("/archive_files", post(day_20::task_1_number_of_files))
-                .route("/archive_files_size", post(day_20::task_1_file_size)),
+                .route("/archive_files_size", post(day_20::task_1_file_size))
+                .route("/cookie", post(day_20::task_2)),
         )
         .nest_service("/11/assets", ServeDir::new("assets"))
         .layer(CookieManagerLayer::new())
