@@ -30,6 +30,7 @@ mod day_18;
 mod day_19;
 mod day_20;
 mod day_21;
+mod day_22;
 
 #[shuttle_runtime::main]
 async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> ShuttleAxum {
@@ -118,6 +119,7 @@ async fn main(#[shuttle_shared_db::Postgres] pool: PgPool) -> ShuttleAxum {
                 .route("/coords/:binary", get(day_21::task_1))
                 .route("/country/:binary", get(day_21::task_2)),
         )
+        .route("/22/integers", post(day_22::task_1))
         .nest_service("/11/assets", ServeDir::new("assets"))
         .layer(CookieManagerLayer::new())
         .with_state(shared_state);
